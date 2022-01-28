@@ -66,3 +66,11 @@ install-shipwright:
 .PHONY: sanity-check
 sanity-check:
 	golangci-lint run
+
+.PHONY: generate-docs
+generate-docs:
+	go run cmd/help/main.go --dir ./docs
+
+.PHONY: verify-docs
+verify-docs:
+	./hack/verify-docs.sh
