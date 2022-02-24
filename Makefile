@@ -10,6 +10,8 @@ KUBECTL_BIN ?= $(OUTPUT_DIR)/kubectl-$(APP)
 GO_FLAGS ?= -v -mod=vendor
 GO_TEST_FLAGS ?= -race -cover
 
+GO_CACHE ?= $(shell go env GOCACHE)
+
 ARGS ?=
 
 # Tekton and Shipwright Build Controller versions for CI
@@ -67,10 +69,14 @@ install-shipwright:
 sanity-check:
 	golangci-lint run
 
+# generates the command-line help messages as markdown files, and in order to have a generic ${HOME}
+# rendered, it exports a fake home directory ("~"), and preserves the original GOCACHE to avoid
+# creating bogus files on the project directory.
 .PHONY: generate-docs
 generate-docs:
-	go run cmd/help/main.go --dir ./docs
+	GOCACHE="$(GO_CACHE)" HOME="~" go run cmd/help/main.go --output-dir=./docs
 
+# checks if the generated documentation files are out of sync.
 .PHONY: verify-docs
-verify-docs:
+verify-docs: generate-docs
 	./hack/verify-docs.sh

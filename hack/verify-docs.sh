@@ -1,17 +1,11 @@
 #!/usr/bin/env bash
 #
-# Verify that generated Markdown docs are up-to-date.
+# Verify that generated Markdown documentation fils are out of sync.
 #
 
-set -o errexit
-set -o nounset
-set -o pipefail
+set -eu -o pipefail
 
-PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-
-pushd "${PROJECT_ROOT}"
-trap popd EXIT
-
-tmpdir=$(mktemp -d)
-go run cmd/help/main.go --dir "$tmpdir"
-diff -Naur -x 'testing.md' "$tmpdir" docs/
+if ( git diff --name-only |grep -q '^docs\/' ) ; then
+	echo "[ERROR] Markdown documenation is out of sync, run 'make generate-docs' and commit the changes!"
+	exit 1
+fi

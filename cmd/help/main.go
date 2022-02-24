@@ -10,27 +10,34 @@ import (
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 )
 
-var dir string
+// outputDirPath stores the path to the output directory.
+var outputDirPath string
+
 var root = &cobra.Command{
 	Use:   "gendoc",
-	Short: "Generate shp's help docs",
+	Short: "Generate shp's command-line help messages as markdown",
 	Args:  cobra.NoArgs,
-	RunE: func(*cobra.Command, []string) error {
-		genericOpts := &genericclioptions.IOStreams{In: os.Stdin, Out: os.Stdout, ErrOut: os.Stderr}
-		cmd := cmd.NewCmdSHP(genericOpts)
-		cmd.DisableAutoGenTag = true
-		return doc.GenMarkdownTree(cmd, dir)
+	RunE: func(_ *cobra.Command, _ []string) error {
+		genericOpts := &genericclioptions.IOStreams{In: os.Stdin, Out: os.Stdout, ErrOut: os.Stdout}
+		shpCmd := cmd.NewCmdSHP(genericOpts)
+		shpCmd.DisableAutoGenTag = true
+		return doc.GenMarkdownTree(shpCmd, outputDirPath)
 	},
 }
 
 func init() {
-	os.Setenv("HOME", "~")
-	root.Flags().StringVarP(&dir, "dir", "d", ".", "Path to directory in which to generate docs")
+	root.Flags().StringVarP(
+		&outputDirPath,
+		"output-dir",
+		"o",
+		".",
+		"Path to output direcotry for generated markdown files",
+	)
 }
 
 func main() {
 	if err := root.Execute(); err != nil {
-		fmt.Println(err)
+		fmt.Fprintf(os.Stderr, "ERROR: %v\n", err)
 		os.Exit(1)
 	}
 }
